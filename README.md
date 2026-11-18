@@ -127,8 +127,9 @@ They download a JSON file, which then goes in `data/raw/`.
 | Variable | Default | Purpose |
 |---|---|---|
 | `OPENROUTER_API_KEY` | — | **Required** for answers |
-| `OPENROUTER_MODELS` | `google/gemma-4-31b-it:free,google/gemma-4-26b-a4b-it:free,nvidia/nemotron-3-ultra-550b-a55b:free` | Tried in order |
-| `LLM_TEMPERATURE` / `LLM_MAX_TOKENS` | `0.2` / `900` | Generation settings |
+| `OPENROUTER_MODELS` | `nvidia/nemotron-3-ultra-550b-a55b:free,nvidia/nemotron-3.5-super-vl:free,google/gemma-4-31b-it:free` | Tried in order |
+| `LLM_TEMPERATURE` / `LLM_MAX_TOKENS` | `0.2` / `1500` | Generation settings |
+| `LLM_DISABLE_REASONING` | `true` | Turn off hidden "thinking" tokens; they consume the answer budget and add latency |
 | `ENABLE_EMBEDDINGS` | `true` | `false` = BM25-only (lighter) |
 | `TOP_K` | `8` | Documents per answer |
 | `RATE_LIMIT_PER_MINUTE` | `20` | Per client IP |

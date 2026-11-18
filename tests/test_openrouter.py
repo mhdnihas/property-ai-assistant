@@ -98,3 +98,39 @@ async def test_network_error_falls_back() -> None:
         return httpx.Response(200, content=sse("ok"))
 
     assert await collect(client_with(handler)) == [("ok", "b:free")]
+
+
+async def test_reasoning_is_disabled_by_default() -> None:
+    seen = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen["body"] = json.loads(request.content)
+        return httpx.Response(200, content=sse("ok"))
+
+    await collect(client_with(handler))
+    assert seen["body"]["reasoning"] == {"enabled": False}
+
+
+async def test_reasoning_can_be_left_on() -> None:
+    seen = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen["body"] = json.loads(request.content)
+        return httpx.Response(200, content=sse("ok"))
+
+    client = OpenRouterClient(
+        "k", ["a:free"], disable_reasoning=False, transport=httpx.MockTransport(handler)
+    )
+    await collect(client)
+    assert "reasoning" not in seen["body"]
+
+
+async def test_truncated_answer_is_logged(caplog: pytest.LogCaptureFixture) -> None:
+    body = (
+        'data: {"model": "a:free", "choices": [{"delta": {"content": "cut"}, '
+        '"finish_reason": "length"}]}\n\ndata: [DONE]\n\n'
+    )
+    client = client_with(lambda r: httpx.Response(200, content=body.encode()))
+    with caplog.at_level("WARNING"):
+        assert await collect(client) == [("cut", "a:free")]
+    assert "truncated" in caplog.text

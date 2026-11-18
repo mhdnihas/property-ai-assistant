@@ -51,7 +51,8 @@ class OpenRouterClient:
         *,
         base_url: str = "https://openrouter.ai/api/v1",
         temperature: float = 0.2,
-        max_tokens: int = 900,
+        max_tokens: int = 1500,
+        disable_reasoning: bool = True,
         timeout_s: float = 60.0,
         referer: str | None = None,
         title: str | None = None,
@@ -62,6 +63,9 @@ class OpenRouterClient:
         self.models = list(models)
         self._temperature = temperature
         self._max_tokens = max_tokens
+        # Reasoning models spend hidden "thinking" tokens out of the same max_tokens
+        # budget, which truncated answers. Grounded RAG answers don't need it.
+        self._disable_reasoning = disable_reasoning
         headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
         if referer:
             headers["HTTP-Referer"] = referer
@@ -105,6 +109,8 @@ class OpenRouterClient:
             "temperature": self._temperature,
             "max_tokens": self._max_tokens,
         }
+        if self._disable_reasoning:
+            payload["reasoning"] = {"enabled": False}
         async with self._client.stream("POST", "/chat/completions", json=payload) as resp:
             if resp.status_code in (401, 403):
                 raise LLMError("The AI service rejected the API key. Check OPENROUTER_API_KEY.")
@@ -143,3 +149,5 @@ async def iter_sse_content(lines: AsyncIterator[str]) -> AsyncIterator[str]:
             content = (choice.get("delta") or {}).get("content")
             if content:
                 yield content
+            if choice.get("finish_reason") == "length":
+                log.warning("answer truncated by max_tokens (model=%s)", chunk.get("model"))

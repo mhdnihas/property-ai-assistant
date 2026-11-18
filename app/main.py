@@ -101,6 +101,7 @@ def _build_service(settings: Settings) -> ChatService:
             base_url=settings.openrouter_base_url,
             temperature=settings.llm_temperature,
             max_tokens=settings.llm_max_tokens,
+            disable_reasoning=settings.llm_disable_reasoning,
             timeout_s=settings.llm_timeout_s,
             referer=settings.public_url,
             title=settings.app_title,

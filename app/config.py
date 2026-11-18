@@ -11,9 +11,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 ROOT_DIR = Path(__file__).resolve().parent.parent
 
 DEFAULT_MODELS = (
-    "google/gemma-4-31b-it:free",
-    "google/gemma-4-26b-a4b-it:free",
     "nvidia/nemotron-3-ultra-550b-a55b:free",
+    "nvidia/nemotron-3.5-super-vl:free",
+    "google/gemma-4-31b-it:free",
 )
 
 
@@ -26,7 +26,8 @@ class Settings(BaseSettings):
     # Comma-separated in the environment; tried in order until one responds.
     openrouter_models: str = ",".join(DEFAULT_MODELS)
     llm_temperature: float = Field(0.2, ge=0, le=2)
-    llm_max_tokens: int = Field(900, ge=64, le=4096)
+    llm_max_tokens: int = Field(1500, ge=64, le=4096)
+    llm_disable_reasoning: bool = True  # thinking tokens eat the max_tokens budget
     llm_timeout_s: float = Field(60.0, gt=0)
     public_url: str = "https://huggingface.co/spaces"  # sent as HTTP-Referer to OpenRouter
     app_title: str = "Property AI Assistant"

@@ -1,4 +1,4 @@
-"""FastAPI application: chat API (Server-Sent Events)."""
+"""FastAPI application: chat API (Server-Sent Events) + static web UI."""
 
 from __future__ import annotations
 
@@ -12,15 +12,17 @@ from contextlib import asynccontextmanager
 from typing import Annotated, Any, Literal
 
 from fastapi import Depends, FastAPI, HTTPException, Request
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from app.config import Settings, get_settings
+from app.config import ROOT_DIR, Settings, get_settings
 from app.llm.openrouter import OpenRouterClient
 from app.rag.retriever import HybridRetriever
 from app.rag.service import ChatEvent, ChatService, Turn
 
 log = logging.getLogger("app")
+STATIC_DIR = ROOT_DIR / "app" / "static"
 
 
 # --------------------------------------------------------------------------- schemas
@@ -206,6 +208,12 @@ def create_app(settings: Settings | None = None, service: ChatService | None = N
     @app.exception_handler(HTTPException)
     async def http_error(_: Request, exc: HTTPException) -> JSONResponse:
         return JSONResponse({"error": exc.detail}, status_code=exc.status_code, headers=exc.headers)
+
+    app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+    @app.get("/", include_in_schema=False)
+    async def index() -> FileResponse:
+        return FileResponse(STATIC_DIR / "index.html", headers={"Cache-Control": "no-cache"})
 
     return app
 

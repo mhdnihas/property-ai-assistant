@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Property AI Assistant</title>
+  <meta name="description" content="Ask about DarGlobal luxury projects and Saudi property listings from Wasalt.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23b08d57'/><path d='M8 24V14l8-6 8 6v10h-5v-6h-6v6z' fill='white'/></svg>">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <span class="logo" aria-hidden="true">
+          <svg viewBox="0 0 32 32"><path d="M8 24V14l8-6 8 6v10h-5v-6h-6v6z"/></svg>
+        </span>
+        <div>
+          <h1>Property AI Assistant</h1>
+          <p class="subtitle">DarGlobal projects · Wasalt listings</p>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <span id="status" class="status" title="Service status"><span class="dot"></span><span class="status-text">Connecting…</span></span>
+        <button id="new-chat" class="ghost" type="button" title="Start a new conversation">New chat</button>
+      </div>
+    </header>
+
+    <main id="chat" class="chat" aria-live="polite">
+      <section id="welcome" class="welcome">
+        <h2>Find your next property</h2>
+        <p>Ask about DarGlobal's branded residences worldwide, or search Saudi homes listed on Wasalt. Answers come from data scraped from both public websites, with links to every source.</p>
+        <div class="suggestions" id="suggestions">
+          <button type="button">Tell me about Trump Tower Jeddah</button>
+          <button type="button">Villas for sale in Riyadh under 2 million SAR</button>
+          <button type="button">Which DarGlobal projects are in Oman?</button>
+          <button type="button">3 bedroom apartments for rent in Jeddah</button>
+          <button type="button">How can I get Saudi residency by investing?</button>
+          <button type="button">What amenities does Da Vinci Tower by Pagani offer?</button>
+        </div>
+      </section>
+    </main>
+
+    <footer class="composer-wrap">
+      <form id="composer" class="composer" autocomplete="off">
+        <textarea id="input" rows="1" maxlength="1000" placeholder="Ask about a project, a city, a budget…" aria-label="Your question"></textarea>
+        <button id="send" type="submit" class="send" aria-label="Send">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.4 20.4 21 12 3.4 3.6 3.4 10l12.6 2-12.6 2z"/></svg>
+        </button>
+      </form>
+      <p class="disclaimer">AI answers can be wrong. Check the linked sources. Not financial advice.</p>
+    </footer>
+  </div>
+  <script src="/static/markdown.js"></script>
+  <script src="/static/app.js"></script>
+</body>
+</html>

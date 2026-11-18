@@ -40,6 +40,13 @@ def test_health(make_client, fake_llm: FakeLLM) -> None:  # type: ignore[no-unty
     assert "x-request-id" in r.headers
 
 
+def test_index_page_served(make_client, fake_llm: FakeLLM) -> None:  # type: ignore[no-untyped-def]
+    with make_client(fake_llm) as client:
+        r = client.get("/")
+    assert r.status_code == 200
+    assert "Property AI Assistant" in r.text
+
+
 def test_chat_streams_sources_tokens_done(make_client, fake_llm: FakeLLM) -> None:  # type: ignore[no-untyped-def]
     with make_client(fake_llm) as client:
         r = client.post("/api/chat", json={"message": "Tell me about Trump Tower Jeddah"})

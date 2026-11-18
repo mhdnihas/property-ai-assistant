@@ -1,0 +1,9 @@
+# Runtime dependencies (pinned; mirrors pyproject.toml). Dev tools: pip install -e ".[dev]"
+fastapi==0.164.0
+uvicorn[standard]==0.54.0
+httpx==0.28.1
+pydantic==2.14.3
+pydantic-settings==2.16.3
+numpy==2.5.5
+rank-bm25==0.2.2
+fastembed==0.9.1

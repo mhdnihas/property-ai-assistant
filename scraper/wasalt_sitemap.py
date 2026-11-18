@@ -13,8 +13,10 @@ browser-extracted category pages, see wasalt_extract.js).
 Usage:
     python scraper/wasalt_sitemap.py            # writes data/raw/wasalt_sitemap_index.jsonl
 """
+
 from __future__ import annotations
 
+import contextlib
 import gzip
 import json
 import re
@@ -38,13 +40,13 @@ STREET_RE = re.compile(r"on-(\d+)m-width-street")
 
 
 def fetch(url: str) -> str:
-    req = Request(url, headers={"User-Agent": UA})
-    with urlopen(req, timeout=60) as r:
+    if not url.startswith("https://"):
+        raise ValueError(f"refusing non-https URL: {url}")
+    req = Request(url, headers={"User-Agent": UA})  # noqa: S310 (scheme checked above)
+    with urlopen(req, timeout=60) as r:  # noqa: S310
         raw = r.read()
-    try:
+    with contextlib.suppress(OSError):  # CDN may already serve it decompressed
         raw = gzip.decompress(raw)
-    except OSError:
-        pass  # CDN already served it decompressed
     return raw.decode("utf-8")
 
 

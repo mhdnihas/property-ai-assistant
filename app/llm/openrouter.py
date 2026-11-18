@@ -3,13 +3,18 @@
 Free models are frequently rate-limited or temporarily unavailable, so the client
 tries a list of models in order and falls back to the next one on retryable
 errors — but only *before* the first token is sent to the user.
+
+A model that answers 429 (rate-limited) or 503 is put on a short cool-down and
+moved to the back of the queue, so users don't wait on a model that is known
+to be failing.
 """
 
 from __future__ import annotations
 
 import json
 import logging
-from collections.abc import AsyncIterator, Sequence
+import time
+from collections.abc import AsyncIterator, Callable, Sequence
 from dataclasses import dataclass
 from typing import Any, Protocol
 
@@ -19,6 +24,7 @@ log = logging.getLogger(__name__)
 
 RETRYABLE_STATUS = frozenset({400, 404, 408, 409, 425, 429, 500, 502, 503, 504})
 # 400/404 included: a free model that was renamed/removed answers with these.
+COOL_DOWN_STATUS = frozenset({429, 503})
 
 
 class LLMError(RuntimeError):
@@ -26,7 +32,9 @@ class LLMError(RuntimeError):
 
 
 class _ModelFailed(Exception):
-    pass
+    def __init__(self, message: str, status: int | None = None) -> None:
+        super().__init__(message)
+        self.status = status
 
 
 @dataclass(slots=True, frozen=True)
@@ -54,13 +62,18 @@ class OpenRouterClient:
         max_tokens: int = 1500,
         disable_reasoning: bool = True,
         timeout_s: float = 60.0,
+        cool_down_s: float = 60.0,
         referer: str | None = None,
         title: str | None = None,
         transport: httpx.AsyncBaseTransport | None = None,
+        clock: Callable[[], float] = time.monotonic,
     ) -> None:
         if not models:
             raise ValueError("at least one model is required")
         self.models = list(models)
+        self._cool_down_s = cool_down_s
+        self._clock = clock
+        self._cooling_until: dict[str, float] = {}
         self._temperature = temperature
         self._max_tokens = max_tokens
         # Reasoning models spend hidden "thinking" tokens out of the same max_tokens
@@ -81,8 +94,14 @@ class OpenRouterClient:
     async def aclose(self) -> None:
         await self._client.aclose()
 
+    def model_order(self) -> list[str]:
+        """Configured order, with models still cooling down moved to the end."""
+        now = self._clock()
+        ready = [m for m in self.models if self._cooling_until.get(m, 0.0) <= now]
+        return ready + [m for m in self.models if m not in ready]
+
     async def stream_chat(self, messages: list[dict[str, str]]) -> AsyncIterator[Delta]:
-        for model in self.models:
+        for model in self.model_order():
             started = False
             try:
                 async for text in self._stream_one(model, messages):
@@ -94,6 +113,8 @@ class OpenRouterClient:
             except _ModelFailed as exc:
                 if started:
                     raise LLMError("The answer was interrupted. Please try again.") from exc
+                if exc.status in COOL_DOWN_STATUS:
+                    self._cooling_until[model] = self._clock() + self._cool_down_s
                 log.warning("model %s unavailable: %s", model, exc)
             except (httpx.TimeoutException, httpx.TransportError) as exc:
                 if started:
@@ -117,7 +138,7 @@ class OpenRouterClient:
             if resp.status_code != 200:
                 body = (await resp.aread())[:300].decode(errors="replace")
                 if resp.status_code in RETRYABLE_STATUS or resp.status_code == 402:
-                    raise _ModelFailed(f"HTTP {resp.status_code}: {body}")
+                    raise _ModelFailed(f"HTTP {resp.status_code}: {body}", resp.status_code)
                 raise LLMError(f"AI service error (HTTP {resp.status_code}).")
             async for text in iter_sse_content(resp.aiter_lines()):
                 yield text

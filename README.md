@@ -70,7 +70,8 @@ cites its sources.
   injection), and tells the model to say so when it doesn't know.
 - **Resilient LLM client.** Free models are often rate-limited. The client streams over SSE
   and falls back to the next model on 429/5xx/timeouts, but only *before* the first token
-  reaches the user, so answers are never stitched together from two models. A rejected
+  reaches the user, so answers are never stitched together from two models. A model that
+  returns 429 is skipped for 60 seconds so users don't wait on it every time. A rejected
   API key fails fast.
 - **Production hygiene.** Settings come from environment variables, the key is held as a
   secret type and never logged, requests carry IDs, rate limiting is per IP, input sizes are

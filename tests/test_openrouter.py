@@ -134,3 +134,60 @@ async def test_truncated_answer_is_logged(caplog: pytest.LogCaptureFixture) -> N
     with caplog.at_level("WARNING"):
         assert await collect(client) == [("cut", "a:free")]
     assert "truncated" in caplog.text
+
+
+async def test_rate_limited_model_is_skipped_during_cool_down() -> None:
+    now = [0.0]
+    calls: list[str] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        model = json.loads(request.content)["model"]
+        calls.append(model)
+        if model == "a:free":
+            return httpx.Response(429, text="rate limited")
+        return httpx.Response(200, content=sse("ok"))
+
+    client = OpenRouterClient(
+        "k",
+        ["a:free", "b:free"],
+        cool_down_s=60,
+        clock=lambda: now[0],
+        transport=httpx.MockTransport(handler),
+    )
+    await collect(client)
+    assert calls == ["a:free", "b:free"]
+
+    calls.clear()
+    now[0] = 30  # still cooling: b goes first, a is not called
+    await collect(client)
+    assert calls == ["b:free"]
+    assert client.model_order() == ["b:free", "a:free"]
+
+    calls.clear()
+    now[0] = 61  # cool-down over: back to configured order
+    await collect(client)
+    assert calls == ["a:free", "b:free"]
+
+
+async def test_cooling_models_are_still_tried_as_last_resort() -> None:
+    now = [0.0]
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(429, text="rate limited")
+
+    client = OpenRouterClient(
+        "k", ["a:free"], clock=lambda: now[0], transport=httpx.MockTransport(handler)
+    )
+    with pytest.raises(LLMError):
+        await collect(client)
+    # a is cooling, but it is the only model, so it must still be attempted
+    assert client.model_order() == ["a:free"]
+
+
+async def test_non_rate_limit_errors_do_not_cool_down() -> None:
+    client = OpenRouterClient(
+        "k", ["a:free", "b:free"], transport=httpx.MockTransport(lambda r: httpx.Response(500))
+    )
+    with pytest.raises(LLMError):
+        await collect(client)
+    assert client.model_order() == ["a:free", "b:free"]

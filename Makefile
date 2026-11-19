@@ -2,7 +2,7 @@
 PY ?= .venv/bin/python
 IMAGE ?= property-ai-assistant
 
-.PHONY: help install sitemap data index run test lint format check docker-build docker-run
+.PHONY: help install sitemap data index index-full run test lint format check docker-build docker-run
 
 help:  ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
@@ -18,8 +18,11 @@ sitemap:  ## Re-scrape the Wasalt sitemap index (data/raw)
 data:  ## Build cleaned documents from data/raw -> data/processed
 	$(PY) -m pipeline.build_documents
 
-index: data  ## Embed documents and write data/index (takes a few minutes on CPU)
+index: data  ## Embed new/changed documents and write data/index
 	$(PY) -m pipeline.build_index
+
+index-full: data  ## Re-embed every document (a few minutes on CPU)
+	$(PY) -m pipeline.build_index --full
 
 run:  ## Run the app locally with auto-reload on http://localhost:7860
 	$(PY) -m uvicorn app.main:app --reload --port 7860

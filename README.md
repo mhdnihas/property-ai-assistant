@@ -117,7 +117,8 @@ Rebuild the data:
 
 ```bash
 make sitemap   # re-fetch the Wasalt sitemap index
-make index     # data/raw -> documents -> embeddings (a few minutes on CPU)
+make index     # data/raw -> documents -> embeddings (only new/changed docs are embedded)
+make index-full  # re-embed everything (a few minutes on CPU)
 ```
 
 The browser extractors are run by pasting them into the DevTools console on the target site.

@@ -68,3 +68,49 @@ def test_retriever_falls_back_to_bm25_on_mismatched_index(
     assert len(retriever.documents) == 3
     assert not retriever.dense_enabled
     assert "index mismatch" in caplog.text
+
+
+def test_embed_with_reuse_only_embeds_new_or_changed_documents() -> None:
+    from pipeline.build_index import embed_with_reuse
+
+    docs = _docs(3)
+    previous = {
+        (d.id, d.embedding_text): np.full(4, i, dtype=np.float32) for i, d in enumerate(docs)
+    }
+    changed = Document(
+        id="d1", source="darglobal", kind="page", title="Doc 1", url="u", text="new text"
+    )
+    new = Document(id="d9", source="darglobal", kind="page", title="Doc 9", url="u", text="t")
+    embedded: list[str] = []
+
+    def embed(texts: list[str]) -> np.ndarray:
+        embedded.extend(texts)
+        return np.full((len(texts), 4), 7, dtype=np.float32)
+
+    vectors, n_new = embed_with_reuse([docs[0], changed, docs[2], new], previous, embed)
+    assert n_new == 2
+    assert embedded == [changed.embedding_text, new.embedding_text]
+    assert vectors[:, 0].tolist() == [0, 7, 2, 7]  # reused, fresh, reused, fresh
+
+
+def test_embed_with_reuse_skips_model_when_nothing_changed() -> None:
+    from pipeline.build_index import embed_with_reuse
+
+    docs = _docs(2)
+    previous = {(d.id, d.embedding_text): np.ones(4, dtype=np.float32) for d in docs}
+
+    def embed(texts: list[str]) -> np.ndarray:
+        raise AssertionError("model should not be called")
+
+    vectors, n_new = embed_with_reuse(docs, previous, embed)
+    assert n_new == 0
+    assert vectors.shape == (2, 4)
+
+
+def test_previous_vectors_ignored_for_other_model(tmp_path: Path) -> None:
+    from pipeline.build_index import load_previous_vectors
+
+    write_index(tmp_path / "index", _docs(2), np.ones((2, 4), dtype=np.float32), "model-a")
+    assert len(load_previous_vectors(tmp_path / "index", "model-a")) == 2
+    assert load_previous_vectors(tmp_path / "index", "model-b") == {}
+    assert load_previous_vectors(tmp_path / "missing", "model-a") == {}

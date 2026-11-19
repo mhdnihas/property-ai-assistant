@@ -2,7 +2,7 @@
 PY ?= .venv/bin/python
 IMAGE ?= property-ai-assistant
 
-.PHONY: help install sitemap data index index-full run test lint format check docker-build docker-run
+.PHONY: help install sitemap data index index-full run test smoke lint format check docker-build docker-run
 
 help:  ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
@@ -29,6 +29,9 @@ run:  ## Run the app locally with auto-reload on http://localhost:7860
 
 test:  ## Run the test suite
 	$(PY) -m pytest
+
+smoke:  ## End-to-end checks against a running app: make smoke URL=https://...
+	$(PY) scripts/smoke_test.py $(URL)
 
 lint:  ## Lint and check formatting
 	$(PY) -m ruff check .

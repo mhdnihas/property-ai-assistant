@@ -155,12 +155,19 @@ They download a JSON file, which then goes in `data/raw/`.
 
 ```bash
 make check     # ruff lint + format check + pytest
+make smoke     # 7 end-to-end questions against http://localhost:7860
+make smoke URL=https://<user>-<space>.hf.space   # ...or against the live Space
 ```
 
-There are 44 tests covering the query parser, the data pipeline (deduplication, chunking,
-normalisation), retrieval (filters, fusion), the OpenRouter client (streaming, fallback, error
-handling, using a mocked transport) and the API (SSE contract, history, validation, rate
-limiting, missing-key path, shutdown).
+There are 59 unit tests covering the query parser, the data pipeline (deduplication, chunking,
+normalisation, project directory), the index builder (atomic writes, embedding reuse),
+retrieval (filters, fusion, stale-index fallback), the OpenRouter client (streaming, fallback,
+cool-down, error handling, using a mocked transport) and the API (SSE contract, history,
+validation, rate limiting, missing-key path, shutdown).
+
+`scripts/smoke_test.py` asks real questions through the whole stack and checks the answers:
+facts with citations, listings within budget, a follow-up that keeps the budget, the Oman
+project list, an honest "I don't know" and resistance to prompt injection.
 
 ## Project layout
 

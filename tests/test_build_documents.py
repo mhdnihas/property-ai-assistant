@@ -155,3 +155,47 @@ def test_sitemap_stats() -> None:
     assert "151 active property listings" in doc.text
     assert "villa: 150" in doc.text
     assert "3 bedrooms: 150" in doc.text
+
+
+def test_project_directory_groups_projects_by_country() -> None:
+    from pipeline.build_documents import project_directory_documents
+
+    text = " | ".join(
+        [
+            "Projects",
+            "find your next investment",
+            "Oman",
+            "Trump Cliff Villas",
+            "Muscat, Oman",
+            "Fairway Villas",
+            "AIDA",
+            "Oman",
+            "Amour Sans Detour",  # "Oman" here is a location, not a new heading
+            "Spain",
+            "Tierra Viva",
+            "Benahavís, Spain",
+            "More about Prime Locations",
+            "long SEO text that must be ignored",
+        ]
+    )
+    raw = {
+        "pages": [{"path": "/projects", "url": "https://darglobal.co.uk/projects", "text": text}]
+    }
+    docs = {d.title: d for d in project_directory_documents(raw)}
+
+    oman = docs["DarGlobal projects in Oman"]
+    assert "Trump Cliff Villas" in oman.text
+    assert "Amour Sans Detour" in oman.text  # kept in Oman despite the repeated "Oman"
+    assert "Tierra Viva" not in oman.text
+    assert oman.url == "https://darglobal.co.uk/projects/properties-in-oman"
+    assert "Tierra Viva" in docs["DarGlobal projects in Spain"].text
+
+    overview = docs["DarGlobal project directory (all countries)"]
+    assert "2 countries: Oman, Spain" in overview.text
+    assert "SEO" not in overview.text
+
+
+def test_project_directory_absent_page_yields_nothing() -> None:
+    from pipeline.build_documents import project_directory_documents
+
+    assert list(project_directory_documents({"pages": []})) == []

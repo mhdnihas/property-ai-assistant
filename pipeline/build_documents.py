@@ -172,6 +172,74 @@ def darglobal_documents(raw: dict[str, Any]) -> Iterator[Document]:
             )
 
 
+# Country headings used on darglobal.co.uk/projects, and each country's listing page.
+DG_COUNTRIES: dict[str, str] = {
+    "United Arab Emirates": "properties-in-uae",
+    "Spain": "properties-in-spain",
+    "Qatar": "properties-in-qatar",
+    "Oman": "properties-in-oman",
+    "United Kingdom": "properties-in-uk",
+    "Saudi Arabia": "properties-in-saudi-arabia",
+}
+
+
+def project_directory_documents(raw: dict[str, Any]) -> Iterator[Document]:
+    """Build 'DarGlobal projects in <country>' documents from the /projects catalogue.
+
+    The catalogue page starts with every project grouped under a country heading
+    (name, location, unit types, delivery date). Generic chunking scatters that
+    list across chunks, so country questions ("which projects are in Oman?") only
+    saw part of it. One document per country keeps each list whole.
+    """
+    page = next((p for p in raw["pages"] if p.get("path") == "/projects" and p.get("text")), None)
+    if page is None:
+        return
+    segments = [s.strip() for s in page["text"].split(" | ") if s.strip()]
+    end = next((i for i, s in enumerate(segments) if s.startswith("More about")), len(segments))
+
+    groups: dict[str, list[str]] = {}
+    current: str | None = None
+    for seg in segments[:end]:
+        # A country name inside its own section is a location ("AIDA | Oman"), not a heading.
+        if seg in DG_COUNTRIES and seg != current:
+            current = seg
+            groups.setdefault(seg, [])
+        elif current is not None:
+            groups[current].append(seg)
+
+    for country, items in groups.items():
+        if not items:
+            continue
+        yield Document(
+            id=_id("dgdir", country),
+            source="darglobal",
+            kind="catalogue",
+            title=f"DarGlobal projects in {country}",
+            url=f"https://darglobal.co.uk/projects/{DG_COUNTRIES[country]}",
+            text=(
+                f"DarGlobal projects in {country}, from the DarGlobal project catalogue "
+                "(project name, location, unit types and delivery date where listed): "
+                + " | ".join(items)
+            ),
+            meta={"country": country},
+        )
+
+    if groups:
+        summary = "; ".join(f"{c}: " + ", ".join(items) for c, items in groups.items() if items)
+        yield Document(
+            id=_id("dgdir", "all"),
+            source="darglobal",
+            kind="catalogue",
+            title="DarGlobal project directory (all countries)",
+            url=page["url"],
+            text=(
+                f"DarGlobal develops projects in {len(groups)} countries: "
+                f"{', '.join(groups)}. Full directory — {summary}"
+            ),
+            meta={"countries": list(groups)},
+        )
+
+
 # --------------------------------------------------------------------------- Wasalt
 def _rent_text(listing: dict[str, Any]) -> str | None:
     freq = listing.get("rent_frequency") or {}
@@ -340,7 +408,9 @@ def build(raw_dir: Path = RAW_DIR) -> list[Document]:
     sm_path = raw_dir / "wasalt_sitemap_index.jsonl"
 
     if dg_path.exists():
-        docs.extend(darglobal_documents(json.loads(dg_path.read_text(encoding="utf-8"))))
+        dg_raw = json.loads(dg_path.read_text(encoding="utf-8"))
+        docs.extend(darglobal_documents(dg_raw))
+        docs.extend(project_directory_documents(dg_raw))
     if ws_path.exists():
         docs.extend(wasalt_documents(json.loads(ws_path.read_text(encoding="utf-8"))))
     if sm_path.exists():

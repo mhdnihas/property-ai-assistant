@@ -96,6 +96,10 @@ doesn't know.
 
 ## 4. How it works
 
+> 📐 Diagrams for the business case, technical architecture and detailed system design
+> (request sequence, retrieval algorithm, model fallback, data model, deployment) are in
+> **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**.
+
 ```
  OFFLINE: run by developers, outputs committed           RUNTIME: one Docker container
  ┌──────────────────────────────┐                        ┌────────────────────────────────────────┐
@@ -164,6 +168,7 @@ scraper/
   wasalt_extract.js          browser-console extractor for wasalt.sa category pages
   wasalt_sitemap.py          Wasalt public sitemap → listing index
 scripts/smoke_test.py        end-to-end checks against a running deployment
+docs/ARCHITECTURE.md         business, architecture and system-design diagrams (Mermaid)
 tests/                       pytest suite (conftest.py has fixtures and FakeLLM)
 data/raw/                    scraped data            (committed)
 data/processed/              intermediate documents  (git-ignored, regenerated)

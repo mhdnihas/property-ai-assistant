@@ -1,0 +1,24 @@
+# Files NOT uploaded by `gcloud run deploy --source .` (Cloud Build context).
+# Secrets must never leave the machine: the API key lives in Secret Manager.
+.env
+.env.*
+!.env.example
+
+.git/
+.gitignore
+.gcloudignore
+.venv/
+venv/
+.cache/
+**/__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# Not needed in the image (see .dockerignore): keeps uploads small and fast
+data/raw/
+data/processed/
+tests/
+scraper/
+docs/

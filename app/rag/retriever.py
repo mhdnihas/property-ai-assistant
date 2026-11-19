@@ -124,6 +124,15 @@ class HybridRetriever:
         embeddings = np.load(emb_path) if emb_path.exists() and embedder is not None else None
         if embedder is not None and embeddings is None:
             log.warning("embeddings.npy missing — falling back to BM25-only retrieval")
+        if embeddings is not None and len(embeddings) != len(documents):
+            # A stale or half-written index must degrade search quality, not take the
+            # service down. Rebuild with `make index`.
+            log.error(
+                "index mismatch: %d embeddings for %d documents — using BM25-only retrieval",
+                len(embeddings),
+                len(documents),
+            )
+            embeddings = None
         return cls(documents, embeddings, embedder)
 
     # ------------------------------------------------------------------ search

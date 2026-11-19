@@ -21,6 +21,43 @@ writes the answer using only what was found, with a citation for every fact.
 **Stack:** Python 3.12 · FastAPI · BM25 + `bge-small` embeddings (fastembed/ONNX, CPU) ·
 OpenRouter · vanilla JS · Docker
 
+## Features at a glance
+
+**For users and the business**
+
+- 🔎 **One assistant, two sources:** DarGlobal's international projects and Wasalt's Saudi
+  listings, through one conversation
+- 🎯 **Search in plain language with exact criteria:** city, sale or rent, type, bedrooms and
+  budget ("villas in Riyadh under 2M"). Budgets are enforced in code, never guessed.
+- 💬 **Conversational refinement:** "what about Jeddah?" keeps your earlier criteria
+- 🔗 **Verifiable answers:** every fact cites its source page, with source cards that send
+  traffic back to DarGlobal and Wasalt
+- 🌍 **Projects by country**, **investment and residency guidance**, **market insight**
+  (prices, neighbourhoods, inventory)
+- 🛡️ **Brand-safe:** says "I don't know" instead of inventing, and resists manipulation
+- 💸 **$0 to run:** free models, free embeddings, free hosting
+
+**Engineering**
+
+- **Hybrid retrieval:** BM25 + `bge-small` embeddings fused with Reciprocal Rank Fusion, with
+  metadata filters applied *before* ranking
+- **Grounded generation:** citation-enforcing prompt with a prompt-injection defence
+- **End-to-end streaming:** Server-Sent Events with a typed event contract; first word in
+  ~1–2 s
+- **Resilient LLM client:** multi-model fallback before the first token, a 60 s cool-down for
+  rate-limited models, fail-fast on auth errors, reasoning tokens off, truncation detection
+- **Incremental, atomic index builds:** rebuilds went from ~5 min to 3.5 s; a stale index
+  degrades to BM25 instead of crashing
+- **Hardened API:** validation, per-IP rate limiting, request IDs, security headers, secret
+  handling, XSS-safe rendering
+- **Production container:** multi-stage, non-root, health-checked, Hugging Face Spaces ready
+- **Quality:** 59 offline unit tests (< 1 s), a 7-check end-to-end smoke test, ruff, and one
+  verified-green commit per feature
+
+➡️ Full catalogue with code locations, tests, a 5-minute demo script and engineering
+stories: **[docs/FEATURES.md](docs/FEATURES.md)** · Diagrams:
+**[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**
+
 ---
 
 ## Contents
@@ -169,6 +206,7 @@ scraper/
   wasalt_sitemap.py          Wasalt public sitemap → listing index
 scripts/smoke_test.py        end-to-end checks against a running deployment
 docs/ARCHITECTURE.md         business, architecture and system-design diagrams (Mermaid)
+docs/FEATURES.md             feature catalogue: business + technical, demo script, stories
 tests/                       pytest suite (conftest.py has fixtures and FakeLLM)
 data/raw/                    scraped data            (committed)
 data/processed/              intermediate documents  (git-ignored, regenerated)
@@ -318,6 +356,13 @@ All settings are environment variables (or lines in `.env`) and are defined in
   [Conventional Commits](https://www.conventionalcommits.org/):
   `feat(search): …`, `fix(llm): …`, `docs: …`. The body says *why*. Every commit should pass
   `make check` on its own.
+- **Definition of done for a feature:** code + tests + docs, **in the same commit**:
+  - add or update its entry in [docs/FEATURES.md](docs/FEATURES.md): what it does, why it
+    matters, code location, tests, how to demo, and an engineering story if a real problem
+    led to it
+  - update **Features at a glance** at the top of this README if it's a headline feature
+  - update [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) if components, flows or data change,
+    and section 8 if a setting was added
 - Code style is enforced by `ruff` (lint + format, line length 100) and configured in
   `pyproject.toml`. Use type hints everywhere and `from __future__ import annotations`.
 - No secrets in code, logs or commits. The key is a `SecretStr` and is never printed.

@@ -13,6 +13,11 @@ writes the answer using only what was found, with a citation for every fact.
 **Stack:** Python 3.12 · FastAPI · BM25 + `bge-small` embeddings (fastembed/ONNX, CPU) ·
 OpenRouter · vanilla JS · Docker
 
+![System overview: web-scraped data, RAG, OpenRouter LLMs, Docker](docs/overview.png)
+
+*One-page overview with a Mermaid version: [docs/OVERVIEW.md](docs/OVERVIEW.md). Detailed design:
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).*
+
 ## Features at a glance
 
 **For users and the business**
@@ -305,6 +310,8 @@ scraper/
   wasalt_extract.js          browser-console extractor for wasalt.sa category pages
   wasalt_sitemap.py          Wasalt public sitemap → listing index
 scripts/smoke_test.py        end-to-end checks against a running deployment
+docs/OVERVIEW.md             one-page system overview (image + Mermaid)
+docs/overview.png|.svg       the overview diagram as an image
 docs/ARCHITECTURE.md         business, architecture and system-design diagrams (Mermaid)
 docs/FEATURES.md             feature catalogue: business + technical, demo script, stories
 tests/                       pytest suite (conftest.py has fixtures and FakeLLM)

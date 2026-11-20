@@ -7,8 +7,8 @@ This document explains the Property AI Assistant at three levels, each with diag
 3. [Detailed system design](#3-detailed-system-design): components, request flow, algorithms,
    failure handling, data model and deployment
 
-The diagrams are written in [Mermaid](https://mermaid.js.org/), which GitHub and Hugging Face
-render automatically. To edit one, paste it into https://mermaid.live.
+The diagrams are written in [Mermaid](https://mermaid.js.org/), which GitHub renders
+automatically. To edit one, paste it into https://mermaid.live.
 
 ---
 
@@ -108,7 +108,7 @@ journey
 |---|---|
 | Answers people can trust | Retrieval-augmented: the model only sees retrieved documents, and every fact carries an `[n]` link to its source page |
 | Respect budgets and criteria | Price, city, type and bedrooms are applied as strict filters in code, never left to the model |
-| Zero running cost | Free OpenRouter models, a free CPU embedding model, free Hugging Face hosting |
+| Zero running cost | Free OpenRouter models, a free CPU embedding model, free Render hosting |
 | Always available for reviewers | The data is scraped offline and shipped inside the image, so the demo doesn't depend on the source sites being up |
 | Responsible data use | Only public pages, robots.txt respected, polite rate, bot protection not bypassed |
 
@@ -143,7 +143,7 @@ flowchart LR
 
     GIT[("Git repository")]
 
-    subgraph ON["Online serving plane: Docker container on HF Spaces"]
+    subgraph ON["Online serving plane: Docker container on Render"]
         direction TB
         UI["Web UI<br/>static HTML/JS"]
         API["FastAPI<br/>/api/chat, /api/health"]
@@ -190,7 +190,7 @@ flowchart TB
     end
     subgraph Ops
         O1["Docker multi-stage<br/>non-root, health check"]
-        O2["Hugging Face Spaces<br/>hosting + secrets"]
+        O2["Render<br/>hosting, secrets, auto-deploy"]
         O3["pytest + ruff<br/>tests, lint, format"]
     end
     Frontend --> Backend --> Retrieval
@@ -512,22 +512,23 @@ flowchart LR
         CODE --> TEST
     end
 
-    subgraph HF["Hugging Face Spaces"]
-        REPO["Space git repo"]
+    GH[("GitHub<br/>mhdnihas/property-ai-assistant")]
+
+    subgraph RENDER["Render: free web service, Singapore"]
         BUILD["Docker build<br/>multi-stage, ~450 MB"]
-        SECRET["Space secret<br/>OPENROUTER_API_KEY"]
-        subgraph CT["Container: uid 1000, port 7860"]
+        SECRET["Environment variable<br/>OPENROUTER_API_KEY, encrypted"]
+        subgraph CT["Container: non-root uid 1000, PORT=10000"]
             UV["Uvicorn + FastAPI"]
             IDXC[("data/index<br/>+ embedding model baked in")]
-            HC["HEALTHCHECK<br/>/api/health every 30 s"]
         end
-        PROXY["HTTPS proxy<br/>user-name-space.hf.space"]
+        HC["Health check<br/>GET /api/health"]
+        PROXY["HTTPS edge (Cloudflare)<br/>property-ai-assistant.onrender.com"]
     end
 
     USERS(("Users"))
     ORX["OpenRouter"]
 
-    TEST -->|"git push space main"| REPO --> BUILD --> CT
+    TEST -->|"git push origin main"| GH -->|"auto-deploy on commit"| BUILD --> CT
     SECRET -. "env var at runtime" .-> UV
     USERS -->|HTTPS| PROXY -->|"X-Forwarded-For"| UV
     UV -->|"HTTPS, Bearer key"| ORX

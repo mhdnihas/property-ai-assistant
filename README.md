@@ -1,14 +1,3 @@
----
-title: Property AI Assistant
-emoji: 🏙️
-colorFrom: yellow
-colorTo: gray
-sdk: docker
-app_port: 7860
-pinned: false
-short_description: RAG chatbot over DarGlobal projects and Wasalt listings
----
-
 # Property AI Assistant
 
 A chatbot that answers questions about **DarGlobal** luxury projects (darglobal.co.uk) and
@@ -16,7 +5,10 @@ A chatbot that answers questions about **DarGlobal** luxury projects (darglobal.
 (RAG): it searches data scraped from both public websites, then a **free OpenRouter model**
 writes the answer using only what was found, with a citation for every fact.
 
-**Live demo:** _<your Hugging Face Space URL>_
+**Live demo:** **https://property-ai-assistant.onrender.com**
+
+> Hosted on Render's free plan: after 15 minutes without visitors the app sleeps, and the
+> first visit then takes ~50 seconds to wake it. After that, answers start in ~2–4 s.
 
 **Stack:** Python 3.12 · FastAPI · BM25 + `bge-small` embeddings (fastembed/ONNX, CPU) ·
 OpenRouter · vanilla JS · Docker
@@ -50,7 +42,8 @@ OpenRouter · vanilla JS · Docker
   degrades to BM25 instead of crashing
 - **Hardened API:** validation, per-IP rate limiting, request IDs, security headers, secret
   handling, XSS-safe rendering
-- **Production container:** multi-stage, non-root, health-checked, Hugging Face Spaces ready
+- **Production container:** multi-stage, non-root, health-checked, **deployed on Render**
+  (Docker, auto-deploy on push); Cloud Run-ready
 - **Quality:** 59 offline unit tests (< 1 s), a 7-check end-to-end smoke test, ruff, and one
   verified-green commit per feature
 
@@ -319,7 +312,7 @@ All settings are environment variables (or lines in `.env`) and are defined in
 | `MAX_MESSAGE_CHARS` | `1000` | Longest question accepted |
 | `MAX_HISTORY_TURNS` | `6` | Conversation turns sent to the model |
 | `RATE_LIMIT_PER_MINUTE` | `20` | Per client IP |
-| `PUBLIC_URL` | HF Spaces | Sent to OpenRouter as `HTTP-Referer` |
+| `PUBLIC_URL` | `https://property-ai-assistant.onrender.com` | Sent to OpenRouter as `HTTP-Referer` |
 | `LOG_LEVEL` | `INFO` | `DEBUG` for more detail |
 
 ## 9. Development workflow
@@ -431,35 +424,56 @@ make docker-run        # http://localhost:7860, reads .env
 The image contains the app, `data/index/` and the pre-downloaded embedding model. It doesn't
 contain tests, scrapers or raw data (see `.dockerignore`), so containers start in seconds.
 
-### Hugging Face Spaces
+The container reads its port from the `PORT` environment variable (default 7860), so the
+same image runs unchanged on any Docker host.
 
-1. Create a Space at huggingface.co/new-space → SDK **Docker** → Blank → Public.
-2. Space **Settings → Variables and secrets → New secret** → `OPENROUTER_API_KEY`.
-3. Push the repo:
-   ```bash
-   git remote add space https://huggingface.co/spaces/<user>/<space-name>
-   git push space main
-   ```
-   Use a Hugging Face access token with *write* scope as the password.
-4. The Space builds the Dockerfile (about 3–4 minutes) and serves it at
-   `https://<user>-<space-name>.hf.space`.
-5. Check it: `make smoke URL=https://<user>-<space-name>.hf.space`
+### Render (current deployment)
 
-The front matter at the top of this README (`sdk: docker`, `app_port: 7860`) is the Space's
-configuration. Keep it.
+Live at **https://property-ai-assistant.onrender.com** (region Singapore, free instance: 0.1 CPU, 512 MB; the app uses ~340 MB).
+
+1. Push the repo to GitHub.
+2. Render → **New → Web Service** → connect the GitHub repo.
+3. **Language:** Docker · **Branch:** `main` · **Instance:** Free · leave Root Directory and
+   Docker Command empty.
+4. **Environment variables:** `OPENROUTER_API_KEY` = your key (Render stores it encrypted).
+5. **Advanced → Health Check Path:** `/api/health` · **Auto-Deploy:** On Commit.
+6. Deploy (~2–5 minutes). Render injects `PORT=10000`, which the Dockerfile's start command
+   already uses.
+7. Check it: `make smoke URL=https://property-ai-assistant.onrender.com`
+
+Every push to `main` redeploys automatically. Free instances sleep after 15 minutes idle (the
+first request then takes ~50 s). To keep the app warm during a review period, point a free
+uptime monitor (for example UptimeRobot) at `/api/health` every 14 minutes. Render's 750
+free hours a month cover one always-on service.
+
+### Google Cloud Run (alternative)
+
+The repo is ready for Cloud Run too: `.gcloudignore` keeps `.env` and local files out of the
+build upload, and the key goes to Secret Manager.
+
+```bash
+grep '^OPENROUTER_API_KEY=' .env | cut -d= -f2- | tr -d '\n' | gcloud secrets create openrouter-api-key --data-file=-
+gcloud run deploy property-ai-assistant --source . --region us-central1 --allow-unauthenticated \
+  --memory 1Gi --cpu 1 --set-secrets OPENROUTER_API_KEY=openrouter-api-key:latest
+```
+
+The runtime service account needs `roles/secretmanager.secretAccessor` on the secret, and the
+project needs billing enabled.
 
 ## 12. Troubleshooting
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| UI shows **"AI not configured"**, or the chat says *missing OPENROUTER_API_KEY* | No key in `.env` / Space secrets | Add the key. For Docker, `make docker-run` passes `.env`. Restart the app. |
+| UI shows **"AI not configured"**, or the chat says *missing OPENROUTER_API_KEY* | No key in `.env` / the host's environment variables | Add the key. For Docker, `make docker-run` passes `.env`. Restart the app. |
 | *"All AI models are busy right now"* | Every free model is rate-limited | Wait a minute. Add more `:free` models to `OPENROUTER_MODELS`. Free keys have a daily cap: about 50 requests, or about 1,000 after a one-time $10 top-up. |
-| *"The AI service rejected the API key"* | Wrong or revoked key | Create a new key and update `.env` / Space secret |
+| *"The AI service rejected the API key"* | Wrong or revoked key | Create a new key and update `.env` and the host's environment variable |
 | Log: `index mismatch: N embeddings for M documents — using BM25-only` | `data/index/` files are out of sync (e.g. an interrupted build from an older version) | `make index` (or `make index-full`) |
 | Startup: `documents.jsonl not found — run make index` | Index missing | `make index` |
 | Answers end mid-sentence; log says `answer truncated by max_tokens` | Answer longer than `LLM_MAX_TOKENS` | Raise `LLM_MAX_TOKENS`. Keep `LLM_DISABLE_REASONING=true`. |
 | `make docker-run`: *port is already allocated* | Something else is on 7860 | `docker ps`, then `docker rm -f <name>`, or stop `make run` |
 | `/docs` gives 404 | Docs live under `/api/` | Use `/api/docs` |
+| First visit takes ~50 s, or shows a Render loading page | The free instance was asleep (15 min idle) | Wait once, or keep it warm with an uptime monitor on `/api/health` |
+| Chat shows **"network error"** partway through an answer; browser console shows `ERR_QUIC_PROTOCOL_ERROR` | The browser's HTTP/3 (QUIC, over UDP) connection to the host's CDN dropped on an unreliable network. The server still returned 200. | Ask again: Chrome falls back to a TCP connection after a QUIC failure |
 | Listing questions return nothing | Filters too strict for the ~900-listing sample | Check the parsed filters with the snippet in section 10 |
 
 ## 13. Design decisions

@@ -29,7 +29,8 @@ class Settings(BaseSettings):
     llm_max_tokens: int = Field(1500, ge=64, le=4096)
     llm_disable_reasoning: bool = True  # thinking tokens eat the max_tokens budget
     llm_timeout_s: float = Field(60.0, gt=0)
-    public_url: str = "https://huggingface.co/spaces"  # sent as HTTP-Referer to OpenRouter
+    # Sent to OpenRouter as HTTP-Referer (app attribution).
+    public_url: str = "https://property-ai-assistant.onrender.com"
     app_title: str = "Property AI Assistant"
 
     # --- Retrieval ---

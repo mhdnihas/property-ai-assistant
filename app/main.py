@@ -59,7 +59,7 @@ class RateLimiter:
 
 
 def client_ip(request: Request) -> str:
-    # Hugging Face Spaces (and most PaaS) sit behind a proxy that sets X-Forwarded-For.
+    # Render, Cloud Run and most PaaS sit behind a proxy that sets X-Forwarded-For.
     fwd = request.headers.get("x-forwarded-for")
     if fwd:
         return fwd.split(",")[0].strip()

@@ -22,6 +22,7 @@ fixed, with before and after numbers.
 | Speed | First word in **~1–2 s**, full answer in **~3–12 s** (free models, measured end to end) |
 | Quality | **59 unit tests** (offline) · **7/7 end-to-end smoke checks** · lint-clean · every commit green |
 | Cost | **$0**: free LLMs, free CPU embeddings, free hosting |
+| Live | **https://property-ai-assistant.onrender.com** · 7/7 smoke checks pass on the live site · first word in ~2–4 s on the free 0.1-CPU instance |
 
 ---
 
@@ -110,7 +111,7 @@ It has no build step and no external scripts.
 
 ### B10. Zero running cost
 
-Free OpenRouter models, a free CPU embedding model and free Hugging Face hosting mean the
+Free OpenRouter models, a free CPU embedding model and free Render hosting mean the
 whole product runs for **$0**. Moving to paid models is a configuration change
 (`OPENROUTER_MODELS`).
 
@@ -236,13 +237,13 @@ renderer that **escapes all HTML first**. It only allows `http(s)` links and add
 ### T11. Configuration by environment variables
 
 All 18 settings are typed and validated in `app/config.py`, read from environment variables
-or `.env`, with safe defaults. The same image runs locally and on Hugging Face with different
+or `.env`, with safe defaults. The same image runs locally and on Render with different
 settings.
 
 ### T12. Production container
 
-- Multi-stage Docker build, **non-root** user (uid 1000), port 7860 (Hugging Face Spaces
-  compatible)
+- Multi-stage Docker build, **non-root** user (uid 1000), port read from `$PORT`
+  (7860 locally, 10000 on Render)
 - The embedding model is **downloaded at build time** (in the image), so cold starts are fast
 - `HEALTHCHECK` on `/api/health`, and tests, scrapers and raw data are excluded from the image
 - **Code:** `Dockerfile`, `.dockerignore`

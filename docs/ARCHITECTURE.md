@@ -508,7 +508,7 @@ flowchart LR
     subgraph DEV["Developer machine"]
         CODE["Code + data/index"]
         ENV[".env<br/>local key, git-ignored"]
-        TEST["make check<br/>59 unit tests + lint"]
+        TEST["make check<br/>61 unit tests + lint"]
         CODE --> TEST
     end
 

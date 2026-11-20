@@ -171,7 +171,9 @@ def create_app(settings: Settings | None = None, service: ChatService | None = N
             )
         return response
 
-    @app.get("/api/health")
+    # HEAD is accepted too: uptime monitors (e.g. UptimeRobot) and load balancers
+    # often probe with HEAD, and a 405 there would be reported as an outage.
+    @app.api_route("/api/health", methods=["GET", "HEAD"])
     async def health(request: Request) -> dict[str, Any]:
         svc: ChatService = request.app.state.service
         return {
@@ -212,7 +214,7 @@ def create_app(settings: Settings | None = None, service: ChatService | None = N
 
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
-    @app.get("/", include_in_schema=False)
+    @app.api_route("/", methods=["GET", "HEAD"], include_in_schema=False)
     async def index() -> FileResponse:
         return FileResponse(STATIC_DIR / "index.html", headers={"Cache-Control": "no-cache"})
 

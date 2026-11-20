@@ -44,7 +44,7 @@ OpenRouter · vanilla JS · Docker
   handling, XSS-safe rendering
 - **Production container:** multi-stage, non-root, health-checked, **deployed on Render**
   (Docker, auto-deploy on push); Cloud Run-ready
-- **Quality:** 59 offline unit tests (< 1 s), a 7-check end-to-end smoke test, ruff, and one
+- **Quality:** 61 offline unit tests (< 1 s), a 7-check end-to-end smoke test, ruff, and one
   verified-green commit per feature
 
 ➡️ Full catalogue with code locations, tests, a 5-minute demo script and engineering

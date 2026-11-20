@@ -122,3 +122,14 @@ def test_llm_closed_on_shutdown(make_client, fake_llm: FakeLLM) -> None:  # type
     with make_client(fake_llm):
         pass
     assert fake_llm.closed
+
+
+@pytest.mark.parametrize("path", ["/", "/api/health"])
+def test_head_requests_are_supported(make_client, fake_llm: FakeLLM, path: str) -> None:  # type: ignore[no-untyped-def]
+    # Uptime monitors probe with HEAD; a 405 would be reported as downtime.
+    with make_client(fake_llm) as client:
+        get = client.get(path)
+        head = client.head(path)
+    assert head.status_code == 200
+    assert head.content == b""
+    assert head.headers["content-type"] == get.headers["content-type"]

@@ -133,3 +133,11 @@ def test_head_requests_are_supported(make_client, fake_llm: FakeLLM, path: str) 
     assert head.status_code == 200
     assert head.content == b""
     assert head.headers["content-type"] == get.headers["content-type"]
+
+
+def test_docs_redirects_to_api_docs(make_client, fake_llm: FakeLLM) -> None:  # type: ignore[no-untyped-def]
+    with make_client(fake_llm) as client:
+        r = client.get("/docs", follow_redirects=False)
+        assert r.status_code == 307
+        assert r.headers["location"] == "/api/docs"
+        assert client.get("/docs").status_code == 200  # lands on Swagger UI

@@ -44,7 +44,7 @@ OpenRouter · vanilla JS · Docker
   handling, XSS-safe rendering
 - **Production container:** multi-stage, non-root, health-checked, **deployed on Render**
   (Docker, auto-deploy on push); Cloud Run-ready
-- **Quality:** 61 offline unit tests (< 1 s), a 7-check end-to-end smoke test, ruff, and one
+- **Quality:** 62 offline unit tests (< 1 s), a 7-check end-to-end smoke test, ruff, and one
   verified-green commit per feature
 
 ➡️ Full catalogue with code locations, tests, a 5-minute demo script and engineering
@@ -99,7 +99,7 @@ in `data/index/`.
 |---|---|---|
 | Chat page | Open http://localhost:7860 | Green dot at the top right ("1,484 docs indexed"). Click a suggested question: the answer streams in with numbered citations, and **Sources** lists the pages used. |
 | Health | `curl localhost:7860/api/health` | `"status": "ok"`, `"llm_configured": true`, `"dense_retrieval": true` |
-| API docs | Open http://localhost:7860/api/docs | Interactive Swagger page. Try **GET /api/health**. (It's `/api/docs`, not `/docs`.) |
+| API docs | Open http://localhost:7860/api/docs | Interactive Swagger page. Try **GET /api/health**. (`/docs` redirects here.) |
 | Raw stream | see the command below | `event: sources`, then many `event: token`, then `event: done` |
 | Unit tests | `make check` | Lint clean, all tests pass. No network or API key needed. |
 | End to end | `make smoke` | `7/7 checks passed`. Uses 7 real LLM requests. |
@@ -471,7 +471,6 @@ project needs billing enabled.
 | Startup: `documents.jsonl not found — run make index` | Index missing | `make index` |
 | Answers end mid-sentence; log says `answer truncated by max_tokens` | Answer longer than `LLM_MAX_TOKENS` | Raise `LLM_MAX_TOKENS`. Keep `LLM_DISABLE_REASONING=true`. |
 | `make docker-run`: *port is already allocated* | Something else is on 7860 | `docker ps`, then `docker rm -f <name>`, or stop `make run` |
-| `/docs` gives 404 | Docs live under `/api/` | Use `/api/docs` |
 | First visit takes ~50 s, or shows a Render loading page | The free instance was asleep (15 min idle) | Wait once, or keep it warm with an uptime monitor on `/api/health` |
 | Chat shows **"network error"** partway through an answer; browser console shows `ERR_QUIC_PROTOCOL_ERROR` | The browser's HTTP/3 (QUIC, over UDP) connection to the host's CDN dropped on an unreliable network. The server still returned 200. | Ask again: Chrome falls back to a TCP connection after a QUIC failure |
 | Listing questions return nothing | Filters too strict for the ~900-listing sample | Check the parsed filters with the snippet in section 10 |

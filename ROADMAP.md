@@ -12,7 +12,7 @@ OpenRouter model → containerise with Docker → deploy → send a working URL.
 | Wed 18 | Hybrid search index (BM25 + bge-small embeddings + listing filters) | ✅ Done |
 | Wed 18 | FastAPI backend: SSE streaming, OpenRouter with model fallback, rate limiting | ✅ Done |
 | Wed 18 | Chat web UI: streaming, citations, source cards, mobile, dark mode | ✅ Done |
-| Wed 18 / Thu 19 | Tests (61 unit + 7-check smoke test), lint, Docker image (non-root, health check) | ✅ Done |
+| Wed 18 / Thu 19 | Tests (62 unit + 7-check smoke test), lint, Docker image (non-root, health check) | ✅ Done |
 | Thu 19 | Live test with a real OpenRouter key → fixed truncation, rate-limit cool-down, Oman completeness, atomic index | ✅ Done |
 | Thu 19 / Fri 20 | Deploy: Hugging Face Docker is paid and Koyeb closed to new accounts, so deployed on **Render** → https://property-ai-assistant.onrender.com | ✅ Done |
 | Fri 20 | Test the live URL end to end: smoke test 7/7 + browser UI on desktop | ✅ Done (phone not yet checked) |

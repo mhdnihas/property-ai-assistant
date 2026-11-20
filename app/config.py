@@ -10,6 +10,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 
+# The value shipped in .env.example; keep the two in sync.
+PLACEHOLDER_KEY = "sk-or-v1-your-key-here"
+
 DEFAULT_MODELS = (
     "nvidia/nemotron-3-ultra-550b-a55b:free",
     "nvidia/nemotron-3.5-super-vl:free",
@@ -49,7 +52,11 @@ class Settings(BaseSettings):
     @field_validator("openrouter_api_key", mode="before")
     @classmethod
     def _blank_key_is_none(cls, v: object) -> object:
-        return None if isinstance(v, str) and not v.strip() else v
+        """Treat an empty value or the untouched .env.example placeholder as "no key",
+        so the app reports "AI not configured" instead of failing on every request."""
+        if isinstance(v, str) and (not v.strip() or v.strip() == PLACEHOLDER_KEY):
+            return None
+        return v
 
     @property
     def models(self) -> list[str]:

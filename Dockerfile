@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.7
-# Property AI Assistant — production image (Hugging Face Spaces compatible: port 7860, uid 1000)
+# Property AI Assistant — production image. Listens on $PORT (default 7860; Render sets 10000).
 
 # ---------- builder: install deps into a virtualenv ----------
 FROM python:3.12-slim AS builder
@@ -18,7 +18,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PORT=7860 \
     EMBEDDING_CACHE_DIR=/home/user/app/.cache/fastembed
 
-# Hugging Face Spaces runs containers as uid 1000
+# Run as an unprivileged user (uid 1000), never as root
 RUN useradd --create-home --uid 1000 user \
     && install -d -o user -g user /home/user/app
 WORKDIR /home/user/app

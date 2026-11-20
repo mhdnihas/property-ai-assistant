@@ -44,7 +44,7 @@ OpenRouter · vanilla JS · Docker
   handling, XSS-safe rendering
 - **Production container:** multi-stage, non-root, health-checked, **deployed on Render**
   (Docker, auto-deploy on push); Cloud Run-ready
-- **Quality:** 62 offline unit tests (< 1 s), a 7-check end-to-end smoke test, ruff, and one
+- **Quality:** 68 offline unit tests (~1 s), a 7-check end-to-end smoke test, ruff, and one
   verified-green commit per feature
 
 ➡️ Full catalogue with code locations, tests, a 5-minute demo script and engineering
@@ -55,8 +55,8 @@ stories: **[docs/FEATURES.md](docs/FEATURES.md)** · Diagrams:
 
 ## Contents
 
-1. [Quick start (5 minutes)](#1-quick-start-5-minutes)
-2. [Check that it works](#2-check-that-it-works)
+1. [Getting started](#1-getting-started): prerequisites, run without Docker, run with Docker
+2. [Using the app: URLs and checks](#2-using-the-app-urls-and-checks): chat page, `/api/docs`, health, dashboards
 3. [What it can answer](#3-what-it-can-answer)
 4. [How it works](#4-how-it-works)
 5. [Project layout](#5-project-layout)
@@ -72,42 +72,149 @@ stories: **[docs/FEATURES.md](docs/FEATURES.md)** · Diagrams:
 
 ---
 
-## 1. Quick start (5 minutes)
+## 1. Getting started
 
-**You need:** Python 3.11+, `make`, Git, and a free OpenRouter API key. Docker is optional.
+You **don't** need to scrape data or build anything to run the app: the search index is
+already committed in `data/index/`. Pick **Option A** (plain Python, best for development)
+or **Option B** (Docker, the same way it runs in production).
+
+### 1.1 Prerequisites
+
+| Tool | Needed for | Check with |
+|---|---|---|
+| Python **3.11+** (3.12 recommended) | Option A | `python3 --version` |
+| Git | Getting the code | `git --version` |
+| Docker | Option B only | `docker --version` |
+| `make` | Optional shortcuts (Linux/macOS have it; every `make` command below also has a plain equivalent) | `make --version` |
+| OpenRouter API key | AI answers (free) | see 1.2 |
+
+### 1.2 Get the code and an API key
 
 ```bash
-git clone <this repo> && cd property-ai-assistant
-make install                 # creates .venv and installs runtime + dev dependencies
-cp .env.example .env         # then edit .env and set OPENROUTER_API_KEY
-make run                     # http://localhost:7860 (auto-reloads on code changes)
+git clone https://github.com/mhdnihas/property-ai-assistant.git
+cd property-ai-assistant
+cp .env.example .env
 ```
 
-**Getting an OpenRouter key:** sign in at openrouter.ai → **Keys** → **Create API Key**. Copy
-it right away (it starts with `sk-or-v1-` and is shown only once) and paste it into `.env`.
-Free models don't use credits. `.env` is git-ignored, so never commit the key.
+Get a free OpenRouter key: sign in at **openrouter.ai** → **Keys** → **Create API Key**. Copy
+it right away (it starts with `sk-or-v1-` and is shown only once). Open `.env` and set:
 
-The first start downloads the query-embedding model (about 70 MB, into `.cache/fastembed/`).
-Later starts take a few seconds.
+```
+OPENROUTER_API_KEY=sk-or-v1-...
+```
 
-You **don't** need to scrape or build anything to run the app. The search index is committed
-in `data/index/`.
+`.env` is git-ignored and excluded from Docker and cloud builds, so the key never gets
+committed or uploaded. All other settings have sensible defaults (see
+[Configuration](#8-configuration)).
 
-## 2. Check that it works
+### 1.3 Option A: run locally without Docker
+
+**With `make`** (Linux/macOS):
+
+```bash
+make install    # creates .venv and installs runtime + dev dependencies
+make run        # starts the app with auto-reload
+```
+
+**Without `make`** (Linux/macOS), the same thing step by step:
+
+```bash
+python3 -m venv .venv
+.venv/bin/pip install -r requirements-dev.txt
+.venv/bin/python -m uvicorn app.main:app --reload --port 7860
+```
+
+**Windows (PowerShell):** not tested on Windows yet, but these are the equivalent commands:
+
+```powershell
+py -3.12 -m venv .venv
+.venv\Scripts\pip install -r requirements-dev.txt
+.venv\Scripts\python -m uvicorn app.main:app --reload --port 7860
+```
+
+Then open **http://localhost:7860**. The first start downloads the query-embedding model
+(about 70 MB, into `.cache/fastembed/`); later starts take a few seconds. `--reload`
+restarts the server whenever you save a Python file. Stop it with **Ctrl+C**. To use
+another port, change `--port` (e.g. `--port 8000`).
+
+### 1.4 Option B: run with Docker
+
+**With `make`:**
+
+```bash
+make docker-build   # builds the production image (~450 MB, first build takes a few minutes)
+make docker-run     # runs it on http://localhost:7860 with your .env; Ctrl+C stops it
+```
+
+**With plain Docker commands:**
+
+```bash
+docker build -t property-ai-assistant .
+docker run --rm -p 7860:7860 --env-file .env property-ai-assistant
+```
+
+Run it in the background instead, and manage it:
+
+```bash
+docker run -d --name property-ai -p 7860:7860 --env-file .env property-ai-assistant
+docker logs -f property-ai      # follow the logs (Ctrl+C stops following, not the app)
+docker stop property-ai && docker rm property-ai
+```
+
+To use another local port, change the left side of `-p`: `-p 8080:7860` serves the app on
+http://localhost:8080. Rebuild the image after code changes; for day-to-day development
+Option A is faster because of auto-reload.
+
+### 1.5 Running without an API key
+
+The app still starts without a key: the chat page, search and `/api/health` all work, the
+status dot shows **"AI not configured"**, and questions return a clear error instead of an
+answer. That's useful for working on the UI, retrieval or tests. The unit tests never need
+a key.
+
+## 2. Using the app: URLs and checks
+
+### 2.1 Where everything is
+
+| What | Local | Live | Notes |
+|---|---|---|---|
+| **Chat page** (the user portal) | http://localhost:7860 | https://property-ai-assistant.onrender.com | The web UI |
+| **Interactive API docs** (Swagger) | http://localhost:7860/api/docs | https://property-ai-assistant.onrender.com/api/docs | Try requests in the browser. `/docs` redirects here. |
+| **OpenAPI schema** (JSON) | http://localhost:7860/api/openapi.json | https://property-ai-assistant.onrender.com/api/openapi.json | For Postman, client generators |
+| **Health check** | http://localhost:7860/api/health | https://property-ai-assistant.onrender.com/api/health | Status, document count, retrieval mode, models, index info |
+| **Chat API** | `POST /api/chat` | `POST /api/chat` | Server-Sent Events stream, see [API reference](#7-api-reference) |
+
+The live site sleeps after 15 minutes without visitors (Render free plan), so the first
+request after a quiet spell takes ~50 s.
+
+### 2.2 Dashboards (for whoever maintains the deployment)
+
+These need the owner's accounts; new developers working locally don't need them.
+
+| Dashboard | Where | Use it for |
+|---|---|---|
+| **Render** | dashboard.render.com → service `property-ai-assistant` | **Logs** (requests, model used, timings), **Events** (deploys), **Environment** (the API key and other settings), **Manual Deploy**. Every push to `main` deploys automatically. |
+| **OpenRouter** | openrouter.ai → **Activity** / **Keys** | Requests and token usage per model, daily limits, rotating the key |
+| **UptimeRobot** | uptimerobot.com → **Monitoring** | Pings `/api/health` every 5 min to keep the free instance awake and alerts on downtime |
+| **GitHub** | github.com/mhdnihas/property-ai-assistant | Code, history, issues |
+
+### 2.3 Check that it works
 
 | What | How | What you should see |
 |---|---|---|
-| Chat page | Open http://localhost:7860 | Green dot at the top right ("1,484 docs indexed"). Click a suggested question: the answer streams in with numbered citations, and **Sources** lists the pages used. |
+| Chat page | Open the chat page | Green dot at the top right ("1,484 docs indexed"). Click a suggested question: the answer streams in with numbered citations, and **Sources** lists the pages used. |
 | Health | `curl localhost:7860/api/health` | `"status": "ok"`, `"llm_configured": true`, `"dense_retrieval": true` |
-| API docs | Open http://localhost:7860/api/docs | Interactive Swagger page. Try **GET /api/health**. (`/docs` redirects here.) |
+| API docs | Open `/api/docs` | Swagger page. Open **GET /api/health** → **Try it out** → **Execute**. |
 | Raw stream | see the command below | `event: sources`, then many `event: token`, then `event: done` |
-| Unit tests | `make check` | Lint clean, all tests pass. No network or API key needed. |
-| End to end | `make smoke` | `7/7 checks passed`. Uses 7 real LLM requests. |
+| Unit tests | `make check` (or `.venv/bin/python -m pytest` and `.venv/bin/ruff check .`) | Lint clean, all tests pass. No network or API key needed. |
+| End to end | `make smoke` (local) or `make smoke URL=https://property-ai-assistant.onrender.com` | `7/7 checks passed`. Uses 7 real LLM requests. |
 
 ```bash
 curl -N -X POST localhost:7860/api/chat -H 'content-type: application/json' \
   -d '{"message": "Tell me about Trump Tower Jeddah"}'
 ```
+
+`-N` turns off curl's buffering so you see the tokens arrive as they're streamed.
 
 ## 3. What it can answer
 
@@ -464,7 +571,7 @@ project needs billing enabled.
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| UI shows **"AI not configured"**, or the chat says *missing OPENROUTER_API_KEY* | No key in `.env` / the host's environment variables | Add the key. For Docker, `make docker-run` passes `.env`. Restart the app. |
+| UI shows **"AI not configured"**, or the chat says *missing OPENROUTER_API_KEY* | No key in `.env` / the host's environment variables, or `.env` still has the placeholder from `.env.example` | Add the key. For Docker, `make docker-run` passes `.env`. Restart the app. |
 | *"All AI models are busy right now"* | Every free model is rate-limited | Wait a minute. Add more `:free` models to `OPENROUTER_MODELS`. Free keys have a daily cap: about 50 requests, or about 1,000 after a one-time $10 top-up. |
 | *"The AI service rejected the API key"* | Wrong or revoked key | Create a new key and update `.env` and the host's environment variable |
 | Log: `index mismatch: N embeddings for M documents — using BM25-only` | `data/index/` files are out of sync (e.g. an interrupted build from an older version) | `make index` (or `make index-full`) |

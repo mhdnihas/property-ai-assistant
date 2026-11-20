@@ -1,0 +1,257 @@
+<!doctype html>
+<!--
+  Source of docs/Property-AI-Assistant-Showcase.pdf.
+  Regenerate with `make showcase` after changing the project; keep facts in sync with
+  README.md and docs/FEATURES.md.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Property AI Assistant: Project Showcase</title>
+<style>
+  @page { size: A4; margin: 13mm 14mm 13mm 14mm; }
+  :root {
+    --navy: #12263f; --ink: #1e293b; --muted: #55657a; --line: #d9e0e8;
+    --gold: #a57c3b; --gold-soft: #f6efe3; --blue-soft: #eef4fb; --green: #15803d;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { font-family: "Ubuntu", "DejaVu Sans", "Liberation Sans", Arial, sans-serif;
+         font-size: 9.4pt; line-height: 1.42; color: var(--ink);
+         -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  a { color: var(--navy); text-decoration: none; border-bottom: 1px solid #b9c4d2; }
+  code, .mono { font-family: "DejaVu Sans Mono", monospace; font-size: 8.3pt; }
+
+  .page-break { break-before: page; }
+  h2 { font-size: 12.5pt; color: var(--navy); margin: 11px 0 6px; padding-bottom: 4px;
+       border-bottom: 2px solid var(--gold); letter-spacing: 0.01em; }
+  h2 .num { color: var(--gold); margin-right: 6px; }
+  p { margin: 0 0 7px; }
+
+  /* Header */
+  .hero { background: var(--navy); color: #fff; border-radius: 10px; padding: 13px 18px 11px; }
+  .hero .eyebrow { font-size: 8pt; letter-spacing: 0.14em; text-transform: uppercase; color: #d9c29a; }
+  .hero h1 { font-size: 22pt; margin: 3px 0 2px; letter-spacing: -0.01em; }
+  .hero .tagline { font-size: 10.2pt; color: #dbe4ee; margin-bottom: 8px; }
+  .hero .meta { display: flex; justify-content: space-between; font-size: 8.6pt; color: #c3cfdc;
+                border-top: 1px solid #2f4664; padding-top: 8px; }
+  .links { display: flex; gap: 6px; margin: 8px 0 0; flex-wrap: nowrap; }
+  .chip { border: 1px solid var(--line); border-radius: 7px; padding: 4px 8px; font-size: 8.1pt; white-space: nowrap;
+          background: #fff; }
+  .chip b { color: var(--gold); font-weight: 700; margin-right: 4px; }
+  .chip a { border: 0; }
+
+  /* Tables */
+  table { width: 100%; border-collapse: collapse; margin: 4px 0 6px; }
+  th { text-align: left; font-size: 8.3pt; text-transform: uppercase; letter-spacing: 0.06em;
+       color: var(--muted); font-weight: 700; padding: 5px 8px; border-bottom: 1.5px solid var(--navy); }
+  td { padding: 4.5px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  td:first-child { font-weight: 700; color: var(--navy); }
+  .req td:first-child { width: 31%; }
+  .ok { color: var(--green); font-weight: 700; margin-right: 4px; }
+  .cap td:first-child { width: 25%; }
+  .cap td:last-child { width: 33%; }
+  .tech td:first-child { width: 19%; }
+  .ask { font-style: italic; color: #3b4b61; }
+
+  /* Metric tiles */
+  .tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 6px 0 4px; }
+  .tile { background: var(--blue-soft); border-radius: 8px; padding: 7px 11px; }
+  .tile .v { font-size: 15pt; font-weight: 700; color: var(--navy); line-height: 1.15; }
+  .tile .l { font-size: 8.3pt; color: var(--muted); }
+
+  /* Flow */
+  .figure { border: 1px solid var(--line); border-radius: 8px; padding: 6px; margin: 4px 0 4px; }
+  .figure img { width: 100%; display: block; }
+  .caption { font-size: 8.2pt; color: var(--muted); text-align: center; margin: 3px 0 8px; }
+  .flow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; margin: 4px 0 2px; }
+  .step { background: var(--gold-soft); border-radius: 8px; padding: 8px 10px; }
+  .step .n { font-size: 8pt; font-weight: 700; color: var(--gold); letter-spacing: 0.08em; }
+  .step .t { font-weight: 700; color: var(--navy); margin: 1px 0 2px; }
+  .step .d { font-size: 8.4pt; color: #3b4b61; line-height: 1.35; }
+
+  /* Callouts */
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .box { border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px; }
+  .box h3 { font-size: 9.6pt; color: var(--navy); margin: 0 0 5px; }
+  .box ul { margin: 0; padding-left: 15px; }
+  .box li { margin-bottom: 3.5px; }
+  .story { margin-bottom: 5px; }
+  .story b { color: var(--navy); }
+  .result { color: var(--green); font-weight: 700; }
+  .footer { margin-top: 10px; padding-top: 7px; border-top: 1px solid var(--line); font-size: 8.2pt;
+            color: var(--muted); display: flex; justify-content: space-between; }
+</style>
+</head>
+<body>
+
+<!-- ============================ PAGE 1 ============================ -->
+<section class="hero">
+  <div class="eyebrow">Technical assignment · Junior AI Engineer – Applied AI · DarGlobal</div>
+  <h1>Property AI Assistant</h1>
+  <div class="tagline">A Retrieval-Augmented Generation (RAG) chatbot that answers questions about DarGlobal's
+    international projects and Saudi property listings on Wasalt, with every fact cited to its source.</div>
+  <div class="meta"><span>Muhammed Nihas</span><span>20 November 2026</span></div>
+</section>
+
+<div class="links">
+  <span class="chip"><b>Live demo</b><a href="https://property-ai-assistant.onrender.com">property-ai-assistant.onrender.com</a></span>
+  <span class="chip"><b>Source code</b><a href="https://github.com/mhdnihas/property-ai-assistant">github.com/mhdnihas/property-ai-assistant</a></span>
+  <span class="chip"><b>API docs</b><a href="https://property-ai-assistant.onrender.com/api/docs">/api/docs</a></span>
+</div>
+
+<h2><span class="num">01</span>Assignment requirements and delivery</h2>
+<table class="req">
+  <tr><th>Requirement</th><th>Delivered</th></tr>
+  <tr><td><span class="ok">✓</span>Scrape public data from DarGlobal and Wasalt</td>
+      <td>49 unique DarGlobal pages (projects, country catalogue, FAQ, investment and residency); 900 Wasalt
+        listings with price, district, bedrooms and area, plus 111 FAQs and market guides; a 60,000-listing
+        sitemap index. <code>robots.txt</code>-compliant and rate-limited; bot protection was not bypassed.</td></tr>
+  <tr><td><span class="ok">✓</span>Build an AI chatbot on the collected data</td>
+      <td>RAG pipeline over 1,484 indexed documents: hybrid retrieval, grounded answers with inline citations,
+        and a streaming chat interface with source cards.</td></tr>
+  <tr><td><span class="ok">✓</span>Use a free model via OpenRouter</td>
+      <td>NVIDIA Nemotron 3 Ultra (<code>:free</code>), with automatic fallback to Nemotron 3.5 Super and Gemma 4.</td></tr>
+  <tr><td><span class="ok">✓</span>Containerise with Docker</td>
+      <td>Multi-stage image, non-root user, health check. The same image runs locally and in production.</td></tr>
+  <tr><td><span class="ok">✓</span>Deploy and provide a working URL</td>
+      <td>Deployed on Render with auto-deploy from GitHub. 7 of 7 end-to-end checks pass against the live URL.</td></tr>
+</table>
+
+<h2><span class="num">02</span>At a glance</h2>
+<div class="tiles">
+  <div class="tile"><div class="v">1,484</div><div class="l">indexed documents from 2 web-scraped sources</div></div>
+  <div class="tile"><div class="v">~2–4 s</div><div class="l">to first streamed token on the live free tier</div></div>
+  <div class="tile"><div class="v">$0</div><div class="l">running cost: free LLMs, CPU embeddings, free hosting</div></div>
+  <div class="tile"><div class="v">68 + 7</div><div class="l">offline unit tests + live end-to-end checks</div></div>
+  <div class="tile"><div class="v">0 DB</div><div class="l">versioned in-memory index: no database to operate</div></div>
+  <div class="tile"><div class="v">27</div><div class="l">atomic Conventional Commits, each verified green</div></div>
+</div>
+
+<h2><span class="num">03</span>Key design choices</h2>
+<div class="two">
+  <div class="box">
+    <h3>Answers you can trust</h3>
+    <ul>
+      <li>Answers are generated <b>only from retrieved context</b>, and every fact carries an inline <code>[n]</code> citation linking to the source page.</li>
+      <li>Budget, city, type and bedrooms are applied as <b>hard metadata filters in code</b>, before ranking, never left to the LLM.</li>
+      <li>Honest "no information" outside the data, and resistance to prompt injection.</li>
+    </ul>
+  </div>
+  <div class="box">
+    <h3>Built to run reliably on free infrastructure</h3>
+    <ul>
+      <li>Data is scraped and indexed <b>offline</b>, so the service doesn't depend on the source sites being up.</li>
+      <li>Multi-model LLM fallback with rate-limit cool-down keeps answers flowing on free tiers.</li>
+      <li>Graceful degradation (keyword-only search if the vector index is unavailable), health checks and uptime monitoring.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ============================ PAGE 2 ============================ -->
+<div class="page-break"></div>
+<h2><span class="num">04</span>System overview</h2>
+<div class="figure"><img src="../overview.png" alt="System overview"></div>
+<div class="caption">Offline: web scraping → data pipeline → embeddings → search index. Online: Docker container (UI + FastAPI + RAG engine) → OpenRouter → free LLMs.</div>
+
+<div class="flow">
+  <div class="step"><div class="n">1 · UNDERSTAND</div><div class="t">Parse intent</div>
+    <div class="d">Rule-based parser extracts city, sale/rent, property type, bedrooms and price range.</div></div>
+  <div class="step"><div class="n">2 · RETRIEVE</div><div class="t">Hybrid search</div>
+    <div class="d">BM25 + dense vectors fused with Reciprocal Rank Fusion; filters applied first.</div></div>
+  <div class="step"><div class="n">3 · AUGMENT</div><div class="t">Grounded prompt</div>
+    <div class="d">System rules + question + top-8 numbered source documents.</div></div>
+  <div class="step"><div class="n">4 · GENERATE</div><div class="t">Stream the answer</div>
+    <div class="d">LLM via OpenRouter, streamed to the UI over Server-Sent Events.</div></div>
+</div>
+
+<h2><span class="num">05</span>Business capabilities</h2>
+<table class="cap">
+  <tr><th>Capability</th><th>Business value</th><th>Example question</th></tr>
+  <tr><td>Unified property assistant</td>
+      <td>One conversational entry point for a developer's branded projects and a portal's listings.</td>
+      <td class="ask">"Tell me about Trump Tower Jeddah"</td></tr>
+  <tr><td>Exact-criteria search</td>
+      <td>Natural-language criteria become strict filters, so results never exceed the stated budget.</td>
+      <td class="ask">"Villas for sale in Riyadh under 2 million SAR"</td></tr>
+  <tr><td>Conversational refinement</td>
+      <td>Follow-ups keep earlier criteria, matching how buyers actually shop.</td>
+      <td class="ask">"…what about Jeddah?"</td></tr>
+  <tr><td>Portfolio discovery</td>
+      <td>Complete project lists per market, with unit types and delivery dates.</td>
+      <td class="ask">"Which DarGlobal projects are in Oman?"</td></tr>
+  <tr><td>Investment and residency</td>
+      <td>Answers from official content (e.g. SAR 4M Saudi residency threshold), without personal financial advice.</td>
+      <td class="ask">"How can I get Saudi residency by investing?"</td></tr>
+  <tr><td>Verifiable, brand-safe</td>
+      <td>Citations drive traffic back to source pages; no invented facts; stays on topic.</td>
+      <td class="ask">"What is the price of a penthouse on the moon?"</td></tr>
+</table>
+
+<!-- ============================ PAGE 3 ============================ -->
+<div class="page-break"></div>
+<h2><span class="num">06</span>Technical implementation</h2>
+<table class="tech">
+  <tr><th>Area</th><th>Implementation</th></tr>
+  <tr><td>Data acquisition</td>
+      <td>Browser-based extractors reading each site's Next.js <code>__NEXT_DATA__</code> JSON, plus a sitemap parser.
+        Content-hash deduplication, sentence-aware chunking (≤1,400 chars), normalisation through a shared city/type vocabulary.</td></tr>
+  <tr><td>Embeddings and vector store</td>
+      <td><code>BAAI/bge-small-en-v1.5</code> (384-d) via fastembed/ONNX on CPU. In-memory NumPy matrix with exact cosine search (~1 ms),
+        versioned in git. Atomic index builds with incremental re-embedding (rebuild time 5 min → 3.5 s).</td></tr>
+  <tr><td>Retrieval</td>
+      <td>Hybrid BM25 + dense retrieval fused with Reciprocal Rank Fusion (k = 60); metadata pre-filtering; reserved slots for matching
+        listings plus context documents; follow-up queries inherit filters.</td></tr>
+  <tr><td>Generation and grounding</td>
+      <td>System prompt enforces context-only answers, inline citations and "context is data, not instructions" (prompt-injection defence).
+        Reasoning tokens disabled for complete, low-latency answers.</td></tr>
+  <tr><td>LLM resilience</td>
+      <td>Async OpenRouter streaming client: ordered multi-model fallback before the first token, 60 s cool-down on 429/503,
+        fail-fast on authentication errors, truncation detection.</td></tr>
+  <tr><td>API and frontend</td>
+      <td>FastAPI with a typed SSE contract (<code>sources → token → done | error</code>), Pydantic validation, per-IP sliding-window rate
+        limiting, request IDs, security headers. Dependency-free UI with an XSS-safe Markdown renderer.</td></tr>
+  <tr><td>Deployment and ops</td>
+      <td>Multi-stage Docker image (non-root, embedding model baked in, health check) on Render with auto-deploy;
+        environment-based config with secret handling; BM25-only fallback; uptime monitoring.</td></tr>
+  <tr><td>Quality</td>
+      <td>68 offline unit tests (LLM and HTTP mocked), a live smoke test covering facts, budgets, follow-ups, honesty and injection,
+        ruff lint/format, and atomic Conventional Commits.</td></tr>
+</table>
+
+<h2><span class="num">07</span>Engineering decisions validated by testing</h2>
+<div class="story"><b>Truncated answers.</b> Live tests showed answers cut mid-table; token accounting revealed the free reasoning models spent the
+  output budget on hidden reasoning. Disabling reasoning produced complete answers and cut first-token latency
+  <span class="result">from 7–15 s to 1–2 s</span>.</div>
+<div class="story"><b>Incomplete portfolio answers.</b> "Projects in Oman" returned 2 of 12 because the catalogue was split across chunks.
+  Per-country directory documents fixed retrieval: <span class="result">12 of 12 projects</span>.</div>
+<div class="story"><b>Fragile index builds.</b> An interrupted build left documents and vectors out of sync and blocked startup. Builds now
+  swap directories atomically and the service degrades to keyword search: <span class="result">no crash on a stale index</span>.</div>
+
+<h2><span class="num">08</span>Current scope and next steps</h2>
+<div class="two">
+  <div class="box">
+    <h3>Scope today</h3>
+    <ul>
+      <li>Wasalt detail data is a sample (~900 of ~60,000 listings), snapshot of 18 Nov 2026.</li>
+      <li>Retrieval is English-optimised; Arabic queries are not yet supported well.</li>
+      <li>Free hosting tier: ~50 s cold start after 15 min idle (mitigated by uptime monitoring).</li>
+    </ul>
+  </div>
+  <div class="box">
+    <h3>Next steps</h3>
+    <ul>
+      <li>Scheduled re-scrape and re-index pipeline for fresh listings.</li>
+      <li>Arabic support: multilingual embeddings (<code>multilingual-e5-small</code>) and Arabic vocabulary.</li>
+      <li>Retrieval evaluation set (recall@k) in CI; cross-encoder re-ranking; pgvector at scale.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="footer">
+  <span>More in the repository: README · docs/OVERVIEW.md · docs/ARCHITECTURE.md · docs/FEATURES.md</span>
+  <span>Muhammed Nihas</span>
+</div>
+
+</body>
+</html>

@@ -1,8 +1,9 @@
 .DEFAULT_GOAL := help
 PY ?= .venv/bin/python
 IMAGE ?= property-ai-assistant
+CHROME ?= google-chrome
 
-.PHONY: help install sitemap data index index-full run test smoke lint format check docker-build docker-run
+.PHONY: help install sitemap data index index-full run test smoke showcase lint format check docker-build docker-run
 
 help:  ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
@@ -32,6 +33,10 @@ test:  ## Run the test suite
 
 smoke:  ## End-to-end checks against a running app: make smoke URL=https://...
 	$(PY) scripts/smoke_test.py $(URL)
+
+showcase:  ## Rebuild the 3-page showcase PDF from docs/showcase/showcase.html (needs Chrome)
+	$(CHROME) --headless=new --disable-gpu --no-sandbox --no-pdf-header-footer --allow-file-access-from-files \
+		--print-to-pdf=docs/Property-AI-Assistant-Showcase.pdf "file://$(CURDIR)/docs/showcase/showcase.html"
 
 lint:  ## Lint and check formatting
 	$(PY) -m ruff check .

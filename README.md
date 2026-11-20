@@ -18,6 +18,8 @@ OpenRouter · vanilla JS · Docker
 *One-page overview with a Mermaid version: [docs/OVERVIEW.md](docs/OVERVIEW.md). Detailed design:
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).*
 
+📄 **Project showcase (3-page PDF):** [docs/Property-AI-Assistant-Showcase.pdf](docs/Property-AI-Assistant-Showcase.pdf)
+
 ## Features at a glance
 
 **For users and the business**
@@ -311,6 +313,7 @@ scraper/
   wasalt_sitemap.py          Wasalt public sitemap → listing index
 scripts/smoke_test.py        end-to-end checks against a running deployment
 docs/OVERVIEW.md             one-page system overview (image + Mermaid)
+docs/Property-AI-Assistant-Showcase.pdf  3-page project showcase (source: docs/showcase/showcase.html)
 docs/overview.png|.svg       the overview diagram as an image
 docs/ARCHITECTURE.md         business, architecture and system-design diagrams (Mermaid)
 docs/FEATURES.md             feature catalogue: business + technical, demo script, stories
@@ -441,6 +444,7 @@ All settings are environment variables (or lines in `.env`) and are defined in
 | `make test` | Unit tests only |
 | `make format` | Auto-format and auto-fix lint |
 | `make smoke [URL=…]` | End-to-end questions against a running app (uses LLM quota) |
+| `make showcase` | Rebuild the showcase PDF after editing `docs/showcase/showcase.html` |
 | `make data` / `make index` / `make index-full` | Rebuild documents / index |
 | `make docker-build` / `make docker-run` | Production image, run with `.env` |
 | `make help` | List all targets |
@@ -470,6 +474,8 @@ All settings are environment variables (or lines in `.env`) and are defined in
   - update **Features at a glance** at the top of this README if it's a headline feature
   - update [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) if components, flows or data change,
     and section 8 if a setting was added
+  - if a headline number or capability changed, update `docs/showcase/showcase.html` and run
+    `make showcase` to rebuild the PDF
 - Code style is enforced by `ruff` (lint + format, line length 100) and configured in
   `pyproject.toml`. Use type hints everywhere and `from __future__ import annotations`.
 - No secrets in code, logs or commits. The key is a `SecretStr` and is never printed.
